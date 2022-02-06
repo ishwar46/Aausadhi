@@ -1,0 +1,66 @@
+﻿using EPharma.Models;
+using ProudMonkey.Common.Controls;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace EPharma.Managements
+{
+    public partial class Products : System.Web.UI.Page
+    {
+        public MessageBox msgBox { get; set; }
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            msgBox = new MessageBox();
+            this.pnlMsgBox2.Controls.Clear();
+            this.pnlMsgBox2.Controls.Add(msgBox);
+            var sql = "SP_PRODUCTS @FLAG='S'";
+            if (!IsPostBack)
+            {
+                var ProductName = Request.QueryString["ProductName"];
+                if (!string.IsNullOrEmpty(ProductName))
+                {
+                    sql += ", @ProductName=" + ProductName.SingleQuote();
+                }
+
+                var CategoryID = Request.QueryString["CategoryID"];
+                if (!string.IsNullOrEmpty(CategoryID))
+                {
+                    sql += ", @CategoryID=" + CategoryID.SingleQuote();
+                }
+            }
+            var ds = ExecuteQuery.Execute_Query(sql);
+            dataListProduct.DataSource = ds;
+            dataListProduct.DataBind();
+        }
+
+        protected void AddToCart_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                Button btn = (Button)sender;
+                string rawId = btn.CommandArgument.ToString();
+                int productId;
+                if (!String.IsNullOrEmpty(rawId) && int.TryParse(rawId, out productId))
+                {
+                    using (ShoppingCartActions usersShoppingCart = new ShoppingCartActions())
+                    {
+                        usersShoppingCart.AddToCart(Convert.ToInt16(rawId));
+                    }
+                }
+                else
+                {
+                    throw new Exception("ERROR : It is illegal to load AddToCart.aspx without setting a ProductId.");
+                }
+                Response.Redirect("~/Managements/ShoppingCart.aspx");
+            }
+            catch (Exception ex)
+            {
+                msgBox.ShowError(ex.Message);
+            }
+        }
+    }
+}

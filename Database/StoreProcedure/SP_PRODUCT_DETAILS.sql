@@ -1,0 +1,18 @@
+IF OBJECT_ID('SP_PRODUCT_DETAILS') IS NOT NULL
+DROP PROCEDURE SP_PRODUCT_DETAILS
+GO
+CREATE PROCEDURE SP_PRODUCT_DETAILS
+(
+	@FLAG CHAR,
+	@ProductID INT=NULL
+)
+AS
+BEGIN
+	IF @FLAG='S'-----for gridshow
+	BEGIN
+		SELECT P.[NAME], FORMAT(SellPrice,'#,##0.00') [SellPrice], [KeyFeatures], [Descriptions], P.[Icon], C.[Name] Categories, P.ID
+		FROM Products P WITH(NOLOCK)
+		JOIN Category C WITH(NOLOCK) ON P.CategoryID=C.ID
+		WHERE P.ID = @ProductID
+	END
+END
